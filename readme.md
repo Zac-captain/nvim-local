@@ -1,361 +1,303 @@
-# Neovim 配置说明（Go）
+# nvim-local
 
-本文件用于说明当前 **Neovim（以 Go 开发为主）** 的配置结构、插件组成及快捷键约定。
+个人 Neovim 配置，主要面向 **Go 开发** + 通用文本编辑。
 
----
-
-## 一、基本约定
-
-- 插件管理器：**lazy.nvim**
-- Leader 键：`,`（逗号）
-- Which-key 触发键：`,,`
+- 插件管理：[lazy.nvim](https://github.com/folke/lazy.nvim)（`lazy-lock.json` 锁定版本，新机器一致性好）
+- LSP：使用 Neovim 0.11+ 内置 `vim.lsp.config` API（不依赖 nvim-lspconfig）
+- 主题：Catppuccin
 - 字体：JetBrainsMono Nerd Font
-- 当前主线：
-  - Go 后端开发
-  - 通用文本 / 配置编辑
-- 已明确不用：
-  - neotest
-  - treesitter（语法高亮主要依赖 colorscheme + LSP）
+- Leader 键：`,`（逗号）
 
 ---
 
-## 二、插件总览（当前实际使用）
+## Quick Start
 
-### 插件管理
+### 1. 前置条件
 
-- **folke/lazy.nvim**  
-  插件安装、更新、懒加载管理
+- macOS（脚本暂只支持 macOS；Linux 需自行调整）
+- 已安装 [Homebrew](https://brew.sh)
+- 已经把仓库 clone 到 `~/.config/nvim`：
 
-命令：
-- `:Lazy` 打开插件管理界面
+```bash
+git clone git@github.com:007Caption/nvim-local.git ~/.config/nvim
+```
 
----
+### 2. 一键安装
 
-### 文件树（目录浏览）
+```bash
+cd ~/.config/nvim && ./install.sh
+```
 
-> **已从 NvimTree 迁移至 Neo-tree**
+脚本会自动：
 
-- **nvim-neo-tree/neo-tree.nvim**
-- nvim-lua/plenary.nvim
-- nvim-tree/nvim-web-devicons
-- MunifTanjim/nui.nvim
+1. 检查 / 安装 Neovim（要求 ≥ 0.11）
+2. 安装运行时依赖：`git` `ripgrep` `fd` `go` `node`
+3. 安装 JetBrainsMono Nerd Font
+4. 跑 `:Lazy! sync` 按 `lazy-lock.json` 拉取所有插件
+5. 跑 `:MasonInstall gopls` 安装 Go LSP
 
-用途：
-- 左侧目录树
-- 启动时自动打开
-- 自动定位并展开到当前文件
-- 更稳定的窗口与 root 行为
+### 3. 终端字体
 
-说明：
-- 不再使用 `nvim-tree.nvim`
-- Neo-tree 作为独立 UI 文件管理器使用
+把终端字体设置成 **JetBrainsMono Nerd Font**（iTerm2 / Ghostty / WezTerm 等都在偏好设置里），否则文件树和状态栏图标会显示成方框。
 
----
+### 4. 启动
 
-### LSP（代码智能）
+```bash
+nvim
+```
 
-- neovim/nvim-lspconfig
-- williamboman/mason.nvim
-- williamboman/mason-lspconfig.nvim
-
-用途：
-- 跳转定义 / 引用
-- Hover 文档
-- 重命名
-- Code Action
-
-Go 使用：
-- gopls
+进去后建议跑一下 `:checkhealth` 看是否一切正常。
 
 ---
 
-### 自动补全
+## 目录结构
 
-- hrsh7th/nvim-cmp
-- hrsh7th/cmp-nvim-lsp
-- L3MON4D3/LuaSnip
-- saadparwaiz1/cmp_luasnip
+```
+.
+├── init.lua                 # 入口：bootstrap lazy.nvim + require core/plugins
+├── install.sh               # 一键安装脚本（macOS）
+├── lazy-lock.json           # 插件版本锁
+├── lua/
+│   ├── core/
+│   │   ├── options.lua      # vim 基础选项
+│   │   ├── keymaps.lua      # 全局快捷键
+│   │   └── autocmds.lua     # 自动命令
+│   ├── config/              # 插件具体配置（被 plugins/ 调用）
+│   └── plugins/             # 插件声明（每个文件一个/一组插件）
+└── doc/                     # 备忘文档
+```
 
-用途：
-- LSP 补全
-- 代码片段补全
-
----
-
-### 格式化
-
-- **stevearc/conform.nvim**
-
-Go 常用：
-- gofmt
-- goimports（如已配置）
+插件专属快捷键大多写在对应的 `plugins/*.lua` 里，避免 require 顺序问题。
 
 ---
 
-### 查找 / 导航
+## 插件总览
 
-- **nvim-telescope/telescope.nvim**
-- nvim-lua/plenary.nvim
-
-用途：
-- 文件查找
-- 全文搜索
-- Buffer / 历史文件跳转
-
----
-
-### Git
-
-- **lewis6991/gitsigns.nvim**
-
-用途：
-- 行内 diff
-- blame
-- hunk 操作
-
----
-
-### UI
-
-- **nvim-lualine/lualine.nvim**（状态栏）
-- **folke/which-key.nvim**（快捷键提示）
-- **folke/tokyonight.nvim**（主题）
+| 类别 | 插件 |
+|---|---|
+| 插件管理 | folke/lazy.nvim |
+| 主题 | catppuccin/nvim |
+| 启动页 | goolord/alpha-nvim |
+| 状态栏 | nvim-lualine/lualine.nvim |
+| 文件树 | nvim-neo-tree/neo-tree.nvim |
+| 模糊查找 | nvim-telescope/telescope.nvim |
+| 语法高亮 | nvim-treesitter/nvim-treesitter |
+| LSP | mason.nvim + mason-lspconfig.nvim（gopls） |
+| 补全 | hrsh7th/nvim-cmp + cmp-nvim-lsp + LuaSnip |
+| 格式化 | stevearc/conform.nvim |
+| Git | lewis6991/gitsigns.nvim |
+| 调试 | mfussenegger/nvim-dap + dap-ui + dap-go |
+| 跳转 | folke/flash.nvim |
+| 同名高亮 | RRethy/vim-illuminate |
+| 多光标 | mg979/vim-visual-multi |
+| 注释 | numToStr/Comment.nvim |
+| 自动配对 | windwp/nvim-autopairs |
+| 包围编辑 | kylechui/nvim-surround |
+| 快捷键提示 | folke/which-key.nvim |
+| Markdown 渲染 | MeanderingProgrammer/render-markdown.nvim |
 
 ---
 
-### 编辑增强
+## 快捷键全集
 
-- **numToStr/Comment.nvim**（注释）
-- **windwp/nvim-autopairs**（自动括号）
+> Leader = `,`，Which-key 触发 = `,,`
 
----
+### 基础
 
-## 三、快捷键全集
+| 快捷键 | 模式 | 功能 |
+|---|---|---|
+| `,w` | n | 保存文件 |
+| `,q` | n | 关闭当前窗口 |
+| `,h` | n | 清除搜索高亮 |
+| `,,` | n | 打开 which-key 菜单 |
+| `J` | n | 合并行（光标位置不变） |
 
-### Leader 规则
-
-- Leader：`,`
-- Which-key：`,,`
-
----
-
-### 基础操作
+### 窗口
 
 | 快捷键 | 功能 |
-|------|------|
-| `,w` | 保存文件 |
-| `,q` | 关闭当前窗口 |
-| `,h` | 取消搜索高亮 |
-| `J`  | 合并下一行但保持光标位置 |
-
----
-
-### 窗口管理
-
-| 快捷键 | 功能 |
-|------|------|
+|---|---|
 | `,sv` | 垂直分屏 |
 | `,sh` | 水平分屏 |
 | `,sc` | 关闭当前窗口 |
 
----
-
-### LSP（代码导航）
+### 文件树（Neo-tree）
 
 | 快捷键 | 功能 |
-|------|------|
+|---|---|
+| `,n` | 开关文件树 |
+| `,cd` | 定位当前文件到文件树 |
+
+**Neo-tree 窗口内**（标准默认键）：
+
+| 键 | 作用 |
+|---|---|
+| `j / k` | 上下移动 |
+| `Enter` / `l` / `w` | 打开文件 / 展开目录 |
+| `h` | 折叠目录 |
+| `s` / `S` | 垂直 / 水平分屏打开 |
+| `t` | 新 tab 打开 |
+| `a` | 新建文件或目录 |
+| `r` | 重命名 |
+| `d` | 删除 |
+| `y` / `x` / `p` | 复制 / 剪切 / 粘贴 |
+| `.` | 切换显示隐藏文件 |
+| `R` | 刷新 |
+| `q` | 关闭文件树 |
+| `?` | 查看 Neo-tree 内置帮助 |
+
+### 模糊查找（Telescope）
+
+| 快捷键 | 功能 |
+|---|---|
+| `,ff` | 查找文件 |
+| `,fg` | 全文搜索 |
+| `,fr` | 最近文件 |
+| `,bb` | Buffer 列表 |
+| `,gr` | LSP 引用列表（也算 Telescope） |
+
+**Picker 内**：
+
+| 键 | 作用 |
+|---|---|
+| `Ctrl+j` / `Ctrl+k` | 上一个 / 下一个 |
+| `Ctrl+v` / `Ctrl+s` | 垂直 / 水平分屏打开 |
+| `Enter` | 当前窗口打开 |
+
+### LSP
+
+| 快捷键 | 功能 |
+|---|---|
 | `,gd` | 跳转定义 |
 | `,gi` | 跳转实现 |
 | `,gt` | 跳转类型定义 |
-| `,gr` | 查引用 |
-| `,k`  | Hover 文档 |
+| `,gr` | 查找引用（用 Telescope 显示） |
+| `,k` | Hover 文档 |
 | `,rn` | 重命名 |
-| `,ca` | Code Action |
+| `,ca` | Code Action（n / v 都可用） |
 
----
-
-### Neo-tree（目录树）
+### 诊断
 
 | 快捷键 | 功能 |
-|------|------|
-| `,n` | 打开 Neo-tree |
-| `,N` | 关闭 Neo-tree |
-| `,f` | 在目录树中定位当前文件 |
-| `q`  | 在树窗口中关闭 Neo-tree |
+|---|---|
+| `]d` | 下一个诊断（warn 及以上） |
+| `[d` | 上一个诊断 |
+| `,e` | 当前行诊断详情 |
 
-目录树内常用操作（Neo-tree 默认）：
-
-- `j / k`：上下移动
-- `Enter / l / w`：打开文件 / 展开目录
-- `h`：折叠目录
-- `s`：竖分屏打开
-- `S`：横分屏打开
-- `a`：新建文件 / 目录
-- `r`：重命名
-- `d`：删除
-- `y / x / p`：复制 / 剪切 / 粘贴
-- `?`：查看 Neo-tree 内置帮助
-
-> 说明：  
-> Neo-tree 是“文件管理器语义”，快捷键与 Vim 文本编辑模式不同，属正常设计。
-
----
-
-### Telescope（模糊查找）
+### 同名引用（Illuminate）
 
 | 快捷键 | 功能 |
-|------|------|
-| `,ff` | 查找文件 |
-| `,fr` | 最近文件 |
-| `,fg` | 全文搜索 |
-| `,bb` | Buffer 列表 |
+|---|---|
+| `]r` | 下一个同名引用 |
+| `[r` | 上一个同名引用 |
 
-Picker 内操作：
+### 格式化（Conform）
 
-- `Ctrl+j`：下一个
-- `Ctrl+k`：上一个
-- `Ctrl+v`：垂直分屏打开
-- `Ctrl+s`：水平分屏打开
-- `Enter`：当前窗口打开
-
----
+- 保存自动格式化（Go：`gofumpt` + `goimports`）
+- `,f`：手动格式化当前文件
 
 ### Git（gitsigns）
 
 | 快捷键 | 功能 |
-|------|------|
-| `]h` | 下一个 hunk |
-| `[h` | 上一个 hunk |
-| `,gp` | 预览 hunk |
-| `,gs` | 暂存 hunk |
+|---|---|
+| `]h` / `[h` | 下一个 / 上一个变更块 |
+| `,gp` | 预览当前变更块 |
+| `,gs` | 暂存当前变更块 |
 | `,gS` | 暂存整个文件 |
-| `,gu` | 撤销暂存 |
-| `,gb` | 查看当前行 blame |
-| `,gB` | 切换 inline blame |
+| `,gR` | 撤销当前变更块的修改 |
+| `,gu` | 取消暂存 |
+| `,gb` | 当前行 git blame |
+| `,gB` | 切换行内 blame 显示 |
 
-说明：
-- `,gr` 已保留给 LSP 引用，不用于 git reset，避免冲突
+> `,gr` 已分配给 LSP 引用，故不用于 git reset，避免冲突。
 
----
+### 调试（nvim-dap）
+
+| 快捷键 | 功能 |
+|---|---|
+| `,db` | 切换断点 |
+| `,dc` | 启动 / 继续 |
+| `,di` | 步入 |
+| `,do` | 步过 |
+| `,dO` | 步出 |
+| `,dr` | 重启会话 |
+| `,dq` | 终止会话 |
+| `,du` | 切换 dap-ui |
+| `,de` | 查看光标处变量值（n / v） |
+
+启动调试时 dap-ui 会自动开，结束时会自动关。
+
+### 快速跳转（Flash）
+
+| 快捷键 | 模式 | 功能 |
+|---|---|---|
+| `s` | n / x / o | Flash 跳转（输入字符后选标签） |
+| `S` | n / x / o | 仅在当前窗口跳转 |
+| `gs` | n / x / o | 基于 Treesitter 结构跳转 |
+| `r` | o | Flash remote（operator-pending） |
+| `f` / `F` / `t` / `T` | n | 增强版行内字符跳转 |
+
+### 多光标（vim-visual-multi）
+
+| 快捷键 | 功能 |
+|---|---|
+| `Ctrl+n` | 选中当前词；再按选下一个相同 |
+| `Ctrl+S+l` | 选中所有匹配 |
+| `Ctrl+k` | 跳过当前匹配，选下一个 |
+| `Ctrl+p` | 取消上一个选中 |
 
 ### 注释（Comment.nvim）
 
-| 操作 | 功能 |
-|----|----|
-| `gcc` | 注释当前行 |
-| `gc`（可视模式） | 注释选中代码块 |
+| 快捷键 | 模式 | 功能 |
+|---|---|---|
+| `gcc` | n | 注释 / 反注释当前行 |
+| `gc` | v | 注释选中块 |
 
----
+### 包围编辑（nvim-surround）
 
-### 自动括号
+| 操作 | 说明 |
+|---|---|
+| `ys{motion}{char}` | 添加包围（如 `ysiw"` 给一个词加引号） |
+| `ds{char}` | 删除包围 |
+| `cs{old}{new}` | 修改包围（如 `cs"'` 把双引号改单引号） |
 
-- 输入 `{ ( [ ' "` 自动补全
-- 删除时成对删除
+### 自动配对（autopairs）
 
----
+输入 `{ ( [ ' "` 自动补尾；删除时成对删除。
 
-### Which-key
-
-| 快捷键 | 功能 |
-|------|------|
-| `,,` | 显示 Leader 快捷键菜单 |
-
----
-
-
-
-
-
-### Neo-tree（目录树）
-
-> 当前使用 **Neo-tree** 作为唯一目录树插件  
-> Neo-tree 是“文件管理器语义”，快捷键与 Vim 文本编辑模式不同，属正常设计。
-
----
-
-#### 全局快捷键（Leader）
+### 运行
 
 | 快捷键 | 功能 |
-|------|------|
-| `,n` | 打开 Neo-tree（左侧） |
-| `,N` | 关闭 Neo-tree |
-| `,f` | 在 Neo-tree 中定位当前文件 |
+|---|---|
+| `,rr` | 浮窗运行当前文件（Go / Python / Bash） |
+| `,jrr` | Java：mvn test 当前测试类 |
 
-说明：
-- `,n` / `,N` 明确区分 **打开 / 关闭**，不使用 toggle，避免状态不一致
-- `,f` 用于手动 reveal 当前文件（不自动跟随 buffer）
+### 启动页（Alpha）
 
----
+进入空白 nvim 时显示启动页，页面内：
 
-#### Neo-tree 窗口内快捷键（默认）
-
-##### 基础导航
-
-| 快捷键 | 功能 |
-|------|------|
-| `j / k` | 上下移动 |
-| `h` | 折叠目录 / 返回上级 |
-| `l` | 展开目录 / 打开文件 |
-| `Enter` | 打开文件 / 展开目录 |
-| `w` | 打开文件 / 展开目录（等价于 Enter） |
-
-> 说明：  
-> `w` 在 Neo-tree 中表示 **open**，不是 Vim 的 word-motion  
-> 这是 Neo-tree 的设计选择（文件管理器语义）
+| 键 | 功能 |
+|---|---|
+| `f` | 查找文件 |
+| `g` | 全文搜索 |
+| `q` | 退出 |
 
 ---
 
-##### 打开方式（分屏 / Tab）
+## 常见问题
 
-| 快捷键 | 功能 |
-|------|------|
-| `s` | 垂直分屏打开 |
-| `S` | 水平分屏打开 |
-| `t` | 新 tab 打开 |
+**图标显示成方框？**
+没把终端字体设成 Nerd Font。把 iTerm2 / Ghostty / WezTerm 的字体改成 `JetBrainsMono Nerd Font`。
 
----
+**Go 文件没有补全 / 跳转？**
+进入 nvim 跑 `:Mason`，确认 `gopls` 在 Installed 列表里。如果没有，按 `i` 安装。
 
-##### 文件 / 目录操作
+**保存时没自动格式化？**
+检查 `gofumpt` 和 `goimports` 是否在 PATH。装方式：
 
-| 快捷键 | 功能 |
-|------|------|
-| `a` | 新建文件 / 目录 |
-| `r` | 重命名 |
-| `d` | 删除 |
-| `y` | 复制 |
-| `x` | 剪切 |
-| `p` | 粘贴 |
+```bash
+go install mvdan.cc/gofumpt@latest
+go install golang.org/x/tools/cmd/goimports@latest
+```
 
----
-
-##### 显示 / 刷新
-
-| 快捷键 | 功能 |
-|------|------|
-| `.` | 显示 / 隐藏隐藏文件 |
-| `R` | 刷新目录树 |
-| `z` | 折叠所有目录 |
-
----
-
-##### 退出 / 帮助
-
-| 快捷键 | 功能 |
-|------|------|
-| `q` | 关闭 Neo-tree 窗口 |
-| `?` | 显示 Neo-tree 内置帮助 |
-
-> 提示：  
-> 在 Neo-tree 窗口按 `?`，可查看**当前版本真实生效的快捷键列表**
-
----
-
-#### 使用约定说明
-
-- Neo-tree 仅用于：
-  - 浏览目录
-  - 打开 / 新建 / 重命名文件
-- 不在 Neo-tree 窗口进行文本编辑
-- 打开文件后立即回到代码窗口
-
-若需完全 Vim 风格（文件即 buffer），可考虑 `oil.nvim`（未启用）。
+**插件没加载 / 行为异常？**
+跑 `:checkhealth lazy` 和 `:Lazy log` 排查；必要时 `:Lazy sync` 重新同步。
